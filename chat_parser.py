@@ -6,8 +6,8 @@ import datetime
 #### USER SETTINGS ####
 BUILD_NAME_MAP = False
 BUILD_DATE_FILE = True
-BUILD_DATE_YEAR = 2006
-BUILD_DATE_MONTH = 6
+BUILD_DATE_YEAR = 2004
+BUILD_DATE_MONTH = 2
 BUILD_DATE_DAY = 0
 #######################
 
@@ -31,7 +31,10 @@ name_map = {}
 
 global date_file_out
 if(BUILD_DATE_FILE):
-    date_file_out = open("date_file_"+str(start_date)+".xml", "w", encoding='utf-8')
+    fname = "build_file_" + str(start_date) + ".xml"
+    if(BUILD_MONTH):
+        fname = fname[:-7] + ".xml"
+    date_file_out = open(fname, "w", encoding='utf-8')
     date_file_out.write('<?xml version="1.0"?>')
     date_file_out.write("<?xml-stylesheet type='text/xsl' href='MessageLog.xsl'?>")
     date_file_out.write('<Log>')
