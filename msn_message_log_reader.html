@@ -87,7 +87,12 @@ function drop(e) {
 
   var file = e.dataTransfer.files[0];
   var reader = new FileReader();
-  reader.addEventListener('load', fileIn);
+  if (file.name.split('.').pop() == 'xml') {
+    reader.addEventListener('load', fileIn);
+  }
+  else{
+    reader.addEventListener('load', readNameMap);
+  }
   console.log(file);
   reader.readAsText(file);
 }
@@ -136,8 +141,19 @@ function fileIn(e) {
             session = s_id;
             var e = document.createElement('li');
             var t = document.createElement('h1');
-            t.textContent = "New Session "
+            t.textContent = "New Session ";
             t.textContent += date;
+            e.style.color = '#000';
+            e.style.backgroundColor = '#fff';
+            e.appendChild(t);
+            log.appendChild(e);
+        }
+
+        if (m.hasAttribute('File')) {
+            session = s_id;
+            var e = document.createElement('li');
+            var t = document.createElement('h1');
+            t.textContent = "New File";
             e.style.color = '#000';
             e.style.backgroundColor = '#fff';
             e.appendChild(t);
@@ -271,5 +287,6 @@ function readNameMap(e) {
   }
   console.log("Mapped " + Object.keys(name_map).length + " ID names");
 }
+
 
 </script>
