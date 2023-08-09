@@ -7,7 +7,7 @@ import datetime
 BUILD_NAME_MAP = False
 BUILD_DATE_FILE = True
 BUILD_DATE_YEAR = 2004
-BUILD_DATE_MONTH = 2
+BUILD_DATE_MONTH = 4
 BUILD_DATE_DAY = 0
 #######################
 
@@ -46,6 +46,8 @@ for file in glob.glob(os.path.join(path, "*.xml")):
     tree = ET.parse(file)
     root = tree.getroot()
     
+    new_file = True
+    
     if(BUILD_NAME_MAP):
         for child in root:
             if "Message" in child.tag :
@@ -60,8 +62,8 @@ for file in glob.glob(os.path.join(path, "*.xml")):
                 date = child.attrib["Date"].split('/')
                 message_date = datetime.date(int(date[2]), int(date[0]), int(date[1]))
                 if(message_date >= start_date and message_date < end_date):
-                    #print(ET.tostring(child, encoding='utf-8'))
                     if(BUILD_MONTH):
+                        child.attrib["File"] = file_base
                         msg_to_sort.append(child)
                     else:
                         date_file_out.write(ET.tostring(child, encoding='utf-8').decode())
@@ -72,10 +74,30 @@ if(BUILD_NAME_MAP):
         
 if(BUILD_DATE_FILE):
     if(BUILD_MONTH):
+        extend = False
         for x in range(1,32):
-            for msg in msg_to_sort:
+            file_name = ''
+            file_change = False
+            prev_msg_time = 0
+            prev_msg_written = False
+            for msg in msg_to_sort[:]:
+                if(file_name != msg.attrib["File"]):
+                    file_name = msg.attrib["File"]
+                    file_change = True
+                    prev_msg_time = 0
+                msg_time = 24*60*int(msg.attrib["Date"].split('/')[1])
+                msg_time += (int(msg.attrib["Time"].split(':')[0])%12)*60
+                msg_time += int(msg.attrib["Time"].split(':')[1])
+                if(msg.attrib["Time"].split(' ')[1] == "PM"):
+                    msg_time += 12*60
                 day = msg.attrib["Date"].split('/')[1]
-                if x == int(day):
+                if x == int(day) or (prev_msg_written and not file_change and (abs(msg_time - prev_msg_time) < 60)) :
                     date_file_out.write(ET.tostring(msg, encoding='utf-8').decode())
+                    msg_to_sort.remove(msg)
+                    prev_msg_written = True
+                else :
+                    prev_msg_written = False
+                prev_msg_time = msg_time
+                file_change = False
     date_file_out.write('</Log>')
 

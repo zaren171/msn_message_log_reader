@@ -51,242 +51,248 @@
 </html>
 
 <script>
-var log = document.getElementById('log');
-var name_map = {};
-document.addEventListener('drop', drop);
-document.addEventListener('dragover', drag);
-document.addEventListener('dragenter', dragin, false);
-document.addEventListener('dragleave', dragout, false);
-document.addEventListener('dragend', dragout, false);
-document.addEventListener('drop', dragout, false);
+    var log = document.getElementById('log');
+    var name_map = {};
+    document.addEventListener('drop', drop);
+    document.addEventListener('dragover', drag);
+    document.addEventListener('dragenter', dragin, false);
+    document.addEventListener('dragleave', dragout, false);
+    document.addEventListener('dragend', dragout, false);
+    document.addEventListener('drop', dragout, false);
 
-const fileSelector = document.getElementById('xml_file');
-fileSelector.addEventListener('change', (event) => {
-    const fileList = event.target.files;
-    console.log(fileList);
+    const fileSelector = document.getElementById('xml_file');
+    fileSelector.addEventListener('change', (event) => {
+        const fileList = event.target.files;
+        console.log(fileList);
 
-    var file = fileList[0];
-    var reader = new FileReader();
-    reader.addEventListener('load', fileIn);
-    reader.readAsText(file);
+        var file = fileList[0];
+        var reader = new FileReader();
+        reader.addEventListener('load', fileIn);
+        reader.readAsText(file);
     });
 
-const mapSelector = document.getElementById('name_map');
-mapSelector.addEventListener('change', (event) => {
-    const fileList = event.target.files;
-    console.log(fileList);
+    const mapSelector = document.getElementById('name_map');
+    mapSelector.addEventListener('change', (event) => {
+        const fileList = event.target.files;
+        console.log(fileList);
 
-    var file = fileList[0];
-    var reader = new FileReader();
-    reader.addEventListener('load', readNameMap);
-    reader.readAsText(file);
+        var file = fileList[0];
+        var reader = new FileReader();
+        reader.addEventListener('load', readNameMap);
+        reader.readAsText(file);
     });
 
-function drop(e) {
-	e.preventDefault();
+    function drop(e) {
+        e.preventDefault();
 
-  var file = e.dataTransfer.files[0];
-  var reader = new FileReader();
-  if (file.name.split('.').pop() == 'xml') {
-    reader.addEventListener('load', fileIn);
-  }
-  else{
-    reader.addEventListener('load', readNameMap);
-  }
-  console.log(file);
-  reader.readAsText(file);
-}
+        var file = e.dataTransfer.files[0];
+        var reader = new FileReader();
+        if (file.name.split('.').pop() == 'xml') {
+            reader.addEventListener('load', fileIn);
+        }
+        else {
+            reader.addEventListener('load', readNameMap);
+        }
+        console.log(file);
+        reader.readAsText(file);
+    }
 
-function drag(e) {
-	e.preventDefault();
-}
+    function drag(e) {
+        e.preventDefault();
+    }
 
-function dragin(e) {
-	log.style.backgroundColor = '#c00';
-}
+    function dragin(e) {
+        log.style.backgroundColor = '#c00';
+    }
 
-function dragout(e) {
-	log.style.backgroundColor = '';
-}
+    function dragout(e) {
+        log.style.backgroundColor = '';
+    }
 
-function fileIn(e) {
-  var xml = e.target.result;
-  var parser = new DOMParser();
-  var doc = parser.parseFromString(xml, 'text/xml');
-  var messages = doc.querySelectorAll('Message,Join,Leave,Invitation,InvitationResponse');
+    function fileIn(e) {
+        var xml = e.target.result;
+        var parser = new DOMParser();
+        var doc = parser.parseFromString(xml, 'text/xml');
+        var messages = doc.querySelectorAll('Message,Join,Leave,Invitation,InvitationResponse');
 
-  var session = -1;
-  var names = [];
-  var colors = [
-  	'#4363d8', '#f58231', '#e6194B', '#3cb44b', '#911eb4', '#f032e6',
-    '#469990', '#800000', '#000075', '#a9a9a9', '#808000', '#9A6324',
+        var session = -1;
+        var current_file = '';
+        var names = [];
+        var colors = [
+            '#4363d8', '#f58231', '#e6194B', '#3cb44b', '#911eb4', '#f032e6',
+            '#469990', '#800000', '#000075', '#a9a9a9', '#808000', '#9A6324',
 
-    '#ffe119', '#42d4f4', '#bfef45', '#fabed4', '#dcbeff', '#fffac8', '#aaffc3', '#ffd8b1',
-  ];
+            '#ffe119', '#42d4f4', '#bfef45', '#fabed4', '#dcbeff', '#fffac8', '#aaffc3', '#ffd8b1',
+        ];
 
-  log.style.display = 'none';
-  log.innerHTML = '';
+        log.style.display = 'none';
+        log.innerHTML = '';
 
-  for (var i = 0; i < messages.length; i++) {
-  	var m = messages[i];
+        for (var i = 0; i < messages.length; i++) {
+            var m = messages[i];
 
-    if (m.nodeName == 'Message'){
-        var from = m.children[0].children[0].getAttribute('FriendlyName');
-        var date = m.getAttribute('Date');
-        var time = m.getAttribute('Time');
-        var text = m.children[2].textContent;
-        var s_id = m.getAttribute('SessionID');
+            if (m.nodeName == 'Message') {
+                var from = m.children[0].children[0].getAttribute('FriendlyName');
+                var date = m.getAttribute('Date');
+                var time = m.getAttribute('Time');
+                var text = m.children[2].textContent;
+                var s_id = m.getAttribute('SessionID');
 
-        if (s_id != session) {
-            session = s_id;
-            var e = document.createElement('li');
-            var t = document.createElement('h1');
-            t.textContent = "New Session ";
-            t.textContent += date;
-            e.style.color = '#000';
-            e.style.backgroundColor = '#fff';
-            e.appendChild(t);
-            log.appendChild(e);
+
+                if (m.hasAttribute('File')) {
+                    var msg_file_name = m.getAttribute('File');
+                    if (msg_file_name != current_file) {
+                        current_file = msg_file_name;
+                        session = s_id;
+                        var e = document.createElement('li');
+                        var t = document.createElement('h1');
+                        t.textContent = "File change: ";
+                        t.textContent += msg_file_name;
+                        e.style.color = '#000';
+                        e.style.backgroundColor = '#fff';
+                        e.appendChild(t);
+                        log.appendChild(e);
+                    }
+                }
+                if (s_id != session) {
+                    session = s_id;
+                    var e = document.createElement('li');
+                    var t = document.createElement('h1');
+                    t.textContent = "New Session ";
+                    t.textContent += date;
+                    e.style.color = '#000';
+                    e.style.backgroundColor = '#fff';
+                    e.appendChild(t);
+                    log.appendChild(e);
+                }
+
+                var e = document.createElement('li');
+                var t = document.createElement('h3');
+                var dateText = document.createElement('h3');
+                var timeText = document.createElement('h4');
+                var s = document.createElement('span');
+                from = addName(from);
+                from = emojiSwap(from);
+                t.textContent = from;
+                text = emojiSwap(text);
+                s.textContent = text;
+                //s.style = m.children[2].getAttribute('Style');
+                dateText.textContent = date + ' - ' + time;
+                e.appendChild(dateText);
+                e.appendChild(t);
+                e.appendChild(s);
+
+                if (names.indexOf(from) == -1) names.push(from);
+                e.style.backgroundColor = colors[names.indexOf(from) % 20];
+                if ((names.indexOf(from) % 20) > 11) e.style.color = '#000';
+
+                log.appendChild(e);
+            }
+            if (m.nodeName == 'Join' || m.nodeName == 'Leave') {
+                var text = m.children[1].textContent;
+                var e = document.createElement('li');
+                var t = document.createElement('h2');
+                t.textContent = text
+                e.style.color = '#FFF';
+                e.style.backgroundColor = '#000';
+                e.appendChild(t);
+                log.appendChild(e);
+            }
+            if (m.nodeName == 'Invitation' || m.nodeName == 'InvitationResponse') {
+                var text = m.children[2].textContent;
+                var e = document.createElement('li');
+                var t = document.createElement('h2');
+                t.textContent = text
+                e.style.color = '#000';
+                e.style.backgroundColor = '#ffd8b1';
+                e.appendChild(t);
+                log.appendChild(e);
+            }
         }
 
-        if (m.hasAttribute('File')) {
-            session = s_id;
-            var e = document.createElement('li');
-            var t = document.createElement('h1');
-            t.textContent = "New File";
-            e.style.color = '#000';
-            e.style.backgroundColor = '#fff';
-            e.appendChild(t);
-            log.appendChild(e);
+        log.style.display = 'block';
+    }
+
+    function addName(text) {
+        if (text in name_map) text = "( " + name_map[text] + ") " + text;
+        return text;
+    }
+
+    function emojiSwap(text) {
+        text = text.replaceAll("(L)", "💖");
+        text = text.replaceAll("(l)", "💖");
+        text = text.replaceAll("(K)", "💋");
+        text = text.replaceAll("(k)", "💋");
+        text = text.replaceAll("({)", "🤗");
+        text = text.replaceAll("(})", "🤗");
+        text = text.replaceAll(":-)", "😊");
+        text = text.replaceAll(":)", "😊");
+        text = text.replaceAll(":-O", "😮");
+        text = text.replaceAll(":O", "😮");
+        text = text.replaceAll(":o", "😮");
+        text = text.replaceAll(";-)", "😉");
+        text = text.replaceAll(";)", "😉");
+        text = text.replaceAll(":-S", "😕");
+        text = text.replaceAll(":S", "😕");
+        text = text.replaceAll(":s", "😕");
+        text = text.replaceAll(":'(", "😭");
+        text = text.replaceAll("(H)", "😎");
+        text = text.replaceAll("(h)", "😎");
+        text = text.replaceAll("(A)", "😇");
+        text = text.replaceAll("(a)", "😇");
+        text = text.replaceAll(":-#", "🤐");
+        text = text.replaceAll("8-|", "🤓");
+        text = text.replaceAll(":-*", "😯");
+        text = text.replaceAll(":^)", "😕");
+        text = text.replaceAll("<:o)", "🎉");
+        text = text.replaceAll("|-)", "😪");
+        text = text.replaceAll("(Y)", "👍");
+        text = text.replaceAll("(y)", "👍");
+        text = text.replaceAll("(F)", "🌹");
+        text = text.replaceAll("(f)", "🌹");
+        text = text.replaceAll("(@)", "😺");
+        text = text.replaceAll("(8)", "🎵");
+        text = text.replaceAll("(*)", "⭐");
+        text = text.replaceAll("(O)", "⌚");
+        text = text.replaceAll("(o)", "⌚");
+        text = text.replaceAll("(6)", "😈");
+        text = text.replaceAll(":-D", "😃");
+        text = text.replaceAll(":D", "😃");
+        text = text.replaceAll(":d", "😃");
+        text = text.replaceAll(":-P", "😝");
+        text = text.replaceAll(":P", "😝");
+        text = text.replaceAll(":p", "😝");
+        text = text.replaceAll(":-(", "🙁");
+        text = text.replaceAll(":(", "🙁");
+        text = text.replaceAll(":-|", "😐");
+        text = text.replaceAll(":|", "😐");
+        text = text.replaceAll(":-$", "😖");
+        text = text.replaceAll(":$", "😖");
+        text = text.replaceAll(":-@", "😡");
+        text = text.replaceAll(":@", "😡");
+        text = text.replaceAll("8o|", "😬");
+        text = text.replaceAll("^o)", "🙄");
+        text = text.replaceAll("+o)", "🤢");
+        text = text.replaceAll("*-)", "🤔");
+        text = text.replaceAll("8-)", "😒");
+        text = text.replaceAll("(C)", "☕");
+        text = text.replaceAll("(c)", "☕");
+        text = text.replaceAll("(N)", "👎");
+        text = text.replaceAll("(n)", "👎");
+
+        return text;
+    }
+
+    function readNameMap(e) {
+        var text = e.target.result;
+        text = text.split('\n');
+
+        for (var i = 0; i < text.length; i++) {
+            pair = text[i].split(":=:");
+            name_map[pair[0]] = pair[1];
         }
-
-        var e = document.createElement('li');
-        var t = document.createElement('h3');
-        var dateText = document.createElement('h3');
-        var timeText = document.createElement('h4');
-        var s = document.createElement('span');
-        from = addName(from);
-        from = emojiSwap(from);
-        t.textContent = from;
-        text = emojiSwap(text);
-        s.textContent = text;
-        //s.style = m.children[2].getAttribute('Style');
-        dateText.textContent = date + ' - ' + time;
-        e.appendChild(dateText);
-        e.appendChild(t);
-        e.appendChild(s);
-
-            if (names.indexOf(from) == -1) names.push(from);
-            e.style.backgroundColor = colors[names.indexOf(from)%20];
-            if ((names.indexOf(from)%20) > 11) e.style.color = '#000';
-
-        log.appendChild(e);
+        console.log("Mapped " + Object.keys(name_map).length + " ID names");
     }
-    if (m.nodeName == 'Join' || m.nodeName == 'Leave'){
-        var text = m.children[1].textContent;
-        var e = document.createElement('li');
-        var t = document.createElement('h2');
-        t.textContent = text
-        e.style.color = '#FFF';
-        e.style.backgroundColor = '#000';
-        e.appendChild(t);
-        log.appendChild(e);
-    }
-    if (m.nodeName == 'Invitation' || m.nodeName == 'InvitationResponse'){
-        var text = m.children[2].textContent;
-        var e = document.createElement('li');
-        var t = document.createElement('h2');
-        t.textContent = text
-        e.style.color = '#000';
-        e.style.backgroundColor = '#ffd8b1';
-        e.appendChild(t);
-        log.appendChild(e);
-    }
-  }
-
-  log.style.display = 'block';
-}
-
-function addName(text){
-    if(text in name_map) text = "( " + name_map[text] + ") " + text;
-    return text;
-}
-
-function emojiSwap(text){
-    text = text.replaceAll("(L)", "💖");
-    text = text.replaceAll("(l)", "💖");
-    text = text.replaceAll("(K)", "💋");
-    text = text.replaceAll("(k)", "💋");
-    text = text.replaceAll("({)", "🤗");
-    text = text.replaceAll("(})", "🤗");
-    text = text.replaceAll(":-)", "😊");
-    text = text.replaceAll(":)", "😊");
-    text = text.replaceAll(":-O", "😮");
-    text = text.replaceAll(":O", "😮");
-    text = text.replaceAll(":o", "😮");
-    text = text.replaceAll(";-)", "😉");
-    text = text.replaceAll(";)", "😉");
-    text = text.replaceAll(":-S", "😕");
-    text = text.replaceAll(":S", "😕");
-    text = text.replaceAll(":s", "😕");
-    text = text.replaceAll(":'(", "😭");
-    text = text.replaceAll("(H)", "😎");
-    text = text.replaceAll("(h)", "😎");
-    text = text.replaceAll("(A)", "😇");
-    text = text.replaceAll("(a)", "😇");
-    text = text.replaceAll(":-#", "🤐");
-    text = text.replaceAll("8-|", "🤓");
-    text = text.replaceAll(":-*", "😯");
-    text = text.replaceAll(":^)", "😕");
-    text = text.replaceAll("<:o)", "🎉");
-    text = text.replaceAll("|-)", "😪");
-    text = text.replaceAll("(Y)", "👍");
-    text = text.replaceAll("(y)", "👍");
-    text = text.replaceAll("(F)", "🌹");
-    text = text.replaceAll("(f)", "🌹");
-    text = text.replaceAll("(@)", "😺");
-    text = text.replaceAll("(8)", "🎵");
-    text = text.replaceAll("(*)", "⭐");
-    text = text.replaceAll("(O)", "⌚");
-    text = text.replaceAll("(o)", "⌚");
-    text = text.replaceAll("(6)", "😈");
-    text = text.replaceAll(":-D", "😃");
-    text = text.replaceAll(":D", "😃");
-    text = text.replaceAll(":d", "😃");
-    text = text.replaceAll(":-P", "😝");
-    text = text.replaceAll(":P", "😝");
-    text = text.replaceAll(":p", "😝");
-    text = text.replaceAll(":-(", "🙁");
-    text = text.replaceAll(":(", "🙁");
-    text = text.replaceAll(":-|", "😐");
-    text = text.replaceAll(":|", "😐");
-    text = text.replaceAll(":-$", "😖");
-    text = text.replaceAll(":$", "😖");
-    text = text.replaceAll(":-@", "😡");
-    text = text.replaceAll(":@", "😡");
-    text = text.replaceAll("8o|", "😬");
-    text = text.replaceAll("^o)", "🙄");
-    text = text.replaceAll("+o)", "🤢");
-    text = text.replaceAll("*-)", "🤔");
-    text = text.replaceAll("8-)", "😒");
-    text = text.replaceAll("(C)", "☕");
-    text = text.replaceAll("(c)", "☕");
-    text = text.replaceAll("(N)", "👎");
-    text = text.replaceAll("(n)", "👎");
-
-    return text;
-}
-
-function readNameMap(e) {
-  var text = e.target.result;
-  text = text.split('\n');
-
-  for (var i = 0; i < text.length; i++) {
-    pair = text[i].split(":=:");
-    name_map[pair[0]] = pair[1];
-  }
-  console.log("Mapped " + Object.keys(name_map).length + " ID names");
-}
 
 
 </script>
